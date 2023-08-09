@@ -1,117 +1,89 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect, useState } from 'react';
+import {StyleSheet, Switch, Text, View} from 'react-native';
+import { Value } from './components/Value';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  gyroscope,
+  setUpdateIntervalForType,
+  SensorTypes,
+} from 'react-native-sensors';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+function App(): JSX.Element {
+  const [gyroData, setGyroData] = useState({x: 0, y: 0, z: 0});
+  const [gyroEnabled, setGyroEnabled] = useState(false);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  setUpdateIntervalForType(SensorTypes.gyroscope, 400);
+
+  useEffect(() => {
+    let subscription: any;
+
+    if (gyroEnabled) {
+      subscription = gyroscope.subscribe(gyroscopeData => {
+        setGyroData(gyroscopeData);
+        console.log(gyroData)
+      });
+    } else {
+      subscription?.remove();
+    }
+
+    return () => {
+      subscription?.remove();
+    }
+  }, [gyroEnabled])
+
+  const handleGyroToggle = () => {
+    setGyroEnabled(!gyroEnabled)
+  }
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Gyroscope Toggle</Text>
+      <View style={styles.switchContainer}>
+        <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={gyroEnabled ? '#f5dd4b' : '#f4f3f4'}
+          onValueChange={handleGyroToggle}
+          value={gyroEnabled}
+          style={styles.switch}
+        />
+      </View>
+
+      <Text style={styles.headline}>Gyroscope values</Text>
+      <Value name="x" value={gyroData.x} />
+      <Value name="y" value={gyroData.y} />
+      <Value name="z" value={gyroData.z} />
     </View>
   );
 }
 
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  title: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginTop: 80
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  switchContainer: {
+    marginBottom: 60,
+    marginTop: 64
   },
-  highlight: {
-    fontWeight: '700',
+  switch: {
+    transform:[{scaleX: 1.5}, {scaleY: 1.5}]
+  },
+  headline: {
+    fontSize: 30,
+    textAlign: 'center',
+    margin: 10,
+  },
+  instructions: {
+    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 5,
   },
 });
 
